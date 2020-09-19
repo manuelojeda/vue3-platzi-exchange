@@ -1,30 +1,35 @@
 <template>
-  <div id="nav">
-    <router-link to="/">Home</router-link> |
-    <router-link to="/about">About</router-link>
-  </div>
-  <router-view/>
+  <main>
+    <px-header :links="links" />
+
+    <router-view class="container mx-auto px-5 sm:px-20 py-20 flex justify-center" />
+  </main>
 </template>
 
-<style lang="scss">
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
+<script>
+import PxHeader from '@/components/PxHeader'
+
+export default {
+  name: 'app',
+  components: { PxHeader }
 }
+</script>
 
-#nav {
-  padding: 30px;
+<script setup>
+import { ref } from 'vue'
 
-  a {
-    font-weight: bold;
-    color: #2c3e50;
-
-    &.router-link-exact-active {
-      color: #42b983;
-    }
+export const links = ref([
+  {
+    title: 'BTC',
+    to: { name: 'coin-detail', params: { id: 'bitcoin' } }
+  },
+  {
+    title: 'ETH',
+    to: { name: 'coin-detail', params: { id: 'ethereum' } }
+  },
+  {
+    title: 'XRP',
+    to: { name: 'coin-detail', params: { id: 'ripple' } }
   }
-}
-</style>
+])
+</script>
