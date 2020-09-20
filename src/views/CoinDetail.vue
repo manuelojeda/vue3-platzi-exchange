@@ -112,140 +112,126 @@
 </template>
 
 <script>
-import { defineComponent, ref, computed, onMounted, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import api from '@/api'
-import useFilters from '@/composables/useFilters'
 import PxButton from '@/components/PxButton.vue'
 
-export default defineComponent({
+export default ({
   name: 'CoinDetail',
   components: {
     PxButton
-  },
-  setup (_, context) {
-    const route = useRoute()
-    const router = useRouter()
-    const asset = ref({})
-    const history = ref([])
-    const markets = ref([])
-    const isLoading = ref(false)
-    const fromUsd = ref(true)
-    const convertValue = ref(null)
-
-    const toggleConverter = () => {
-      fromUsd.value = !fromUsd.value
-    }
-
-    const computedLogo = computed(() => {
-      if (!asset.value || !asset.value.symbol) {
-        return null
-      }
-      return `https://static.coincap.io/assets/icons/${asset.value.symbol.toLowerCase()}@2x.png`
-    })
-
-    const min = computed(() => {
-      return Math.min(
-        ...history.value.map((h) => parseFloat(h.priceUsd).toFixed(2))
-      )
-    })
-
-    const max = computed(() => {
-      return Math.max(
-        ...history.value.map((h) => parseFloat(h.priceUsd).toFixed(2))
-      )
-    })
-
-    const avg = computed(() => {
-      return Math.abs(
-        ...history.value.map((h) => parseFloat(h.priceUsd).toFixed(2))
-      )
-    })
-
-    const chartData = computed(() => {
-      const data = []
-      history.value.map(h => {
-        data.push([h.date, parseFloat(h.priceUsd).toFixed(2)])
-      })
-
-      return data
-    })
-
-    const convertResult = computed(() => {
-      if (!convertValue.value) {
-        return 0
-      }
-
-      const result = fromUsd.value
-        ? convertValue.value / asset.value.priceUsd
-        : convertValue.value * asset.value.priceUsd
-
-      return result.toFixed(4)
-    })
-
-    const getCoin = async () => {
-      try {
-        isLoading.value = true
-        const id = route.params.id
-
-        const assetApi = await api.getAsset(id)
-        const historyApi = await api.getAssetHistory(id)
-        const marketsApi = await api.getMarkets(id)
-
-        asset.value = await assetApi
-
-        if (!asset.value) {
-          router.push('/error')
-        }
-
-        history.value = await historyApi
-        markets.value = await marketsApi
-        isLoading.value = false
-      } catch (error) {
-        throw new Error()
-      }
-    }
-
-    async function getWebSite (exchange, index) {
-      const response = await api.getExchange(exchange.exchangeId)
-      const url = await response.exchangeUrl
-      markets.value[index].url = url
-    }
-
-    onMounted(async () => {
-      await getCoin()
-    })
-
-    watch(
-      () => route.params,
-      async () => {
-        try {
-          await getCoin()
-        } catch (error) {
-          window.location.href = '/'
-        }
-      }
-    )
-
-    return {
-      asset,
-      history,
-      markets,
-      isLoading,
-      fromUsd,
-      convertValue,
-      min,
-      max,
-      avg,
-      chartData,
-      convertResult,
-      getWebSite,
-      computedLogo,
-      toggleConverter,
-      ...useFilters()
-    }
   }
 })
+</script>
+
+<script setup>
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import api from '@/api'
+import useFilters from '@/composables/useFilters'
+
+export const { dollarFilter, percentFilter } = useFilters()
+
+export const route = useRoute()
+export const router = useRouter()
+export const asset = ref({})
+export const history = ref([])
+export const markets = ref([])
+export const isLoading = ref(false)
+export const fromUsd = ref(true)
+export const convertValue = ref(null)
+
+export const toggleConverter = () => {
+  fromUsd.value = !fromUsd.value
+}
+
+export const computedLogo = computed(() => {
+  if (!asset.value || !asset.value.symbol) {
+    return null
+  }
+  return `https://static.coincap.io/assets/icons/${asset.value.symbol.toLowerCase()}@2x.png`
+})
+
+export const min = computed(() => {
+  return Math.min(
+    ...history.value.map((h) => parseFloat(h.priceUsd).toFixed(2))
+  )
+})
+
+export const max = computed(() => {
+  return Math.max(
+    ...history.value.map((h) => parseFloat(h.priceUsd).toFixed(2))
+  )
+})
+
+export const avg = computed(() => {
+  return Math.abs(
+    ...history.value.map((h) => parseFloat(h.priceUsd).toFixed(2))
+  )
+})
+
+export const chartData = computed(() => {
+  const data = []
+  history.value.map(h => {
+    data.push([h.date, parseFloat(h.priceUsd).toFixed(2)])
+  })
+
+  return data
+})
+
+export const convertResult = computed(() => {
+  if (!convertValue.value) {
+    return 0
+  }
+
+  const result = fromUsd.value
+    ? convertValue.value / asset.value.priceUsd
+    : convertValue.value * asset.value.priceUsd
+
+  return result.toFixed(4)
+})
+
+export const getCoin = async () => {
+  try {
+    isLoading.value = true
+    const id = route.params.id
+
+    const assetApi = await api.getAsset(id)
+    const historyApi = await api.getAssetHistory(id)
+    const marketsApi = await api.getMarkets(id)
+
+    asset.value = await assetApi
+
+    if (!asset.value) {
+      router.push('/error')
+    }
+
+    history.value = await historyApi
+    markets.value = await marketsApi
+    isLoading.value = false
+  } catch (error) {
+    throw new Error()
+  }
+}
+
+async function getWebSite (exchange, index) {
+  const response = await api.getExchange(exchange.exchangeId)
+  const url = await response.exchangeUrl
+  markets.value[index].url = url
+}
+
+onMounted(async () => {
+  await getCoin()
+})
+
+watch(
+  () => route.params,
+  async () => {
+    try {
+      await getCoin()
+    } catch (error) {
+      window.location.href = '/'
+    }
+  }
+)
 </script>
 
 <style scoped>
